@@ -1,0 +1,40 @@
+{
+	"folders": [
+		{
+			"path": "action",
+		},
+		{
+			"path": "provider/github-app-token",
+		},
+		{
+			"path": "provider",
+		},
+		{
+			"path": ".github",
+		},
+	],
+	"settings": {
+		"editor.formatOnSave": true,
+		"files.exclude": {
+			"**/.git": true,
+			"**/.svn": true,
+			"**/.hg": true,
+			"**/CVS": true,
+			"**/.DS_Store": true,
+			"github-app-token": true
+		},
+		"cSpell.words": [
+			"githubapptoken",
+			"HTMLURL",
+			"httplogger",
+			"jwks",
+			"JWKSURI",
+			"oidc",
+			"rawurl",
+			"testdata",
+			"xraylog",
+			"xrayslog"
+		],
+		"makefile.extensionOutputFolder": "./.vscode"
+	}
+}
