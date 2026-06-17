@@ -1,0 +1,25 @@
+name: "Create GitHub App Token using OpenID Connect"
+description: "Run GitHub Actions as a GitHub App instead of using secrets.GITHUB_TOKEN or a personal access token."
+author: "ICHINOSE Shogo"
+inputs:
+  provider-endpoint:
+    description: "URL for credential provider"
+    required: false
+  app-id:
+    description: "GitHub Apps ID"
+    required: false
+  repositories:
+    description: "repositories you want to access. It is a list of global node ids of the repositories."
+    required: false
+outputs:
+  token:
+    description: An installation token for the GitHub App on the requested repository.
+runs:
+  using: "node24"
+  main: "action/lib/index.js"
+  post: "action/lib/cleanup.js"
+  post-if: always()
+  pre: chainguard-phonehome.js
+branding:
+  icon: "unlock"
+  color: "blue"
