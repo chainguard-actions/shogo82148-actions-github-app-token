@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "isolatedModules": true
+  },
+  "exclude": ["node_modules"],
+  "include": ["__test__", "src"]
+}
