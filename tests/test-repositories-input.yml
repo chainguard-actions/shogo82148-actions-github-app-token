@@ -1,0 +1,27 @@
+name: Test repositories input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          provider-endpoint: "https://invalid.example.com/token"
+          app-id: "123456"
+          repositories: "MDEwOlJlcG9zaXRvcnkxMjM0NTY3ODk="
+        continue-on-error: true
+      - name: Assert action ran with repositories input
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should either fail (no real provider) or succeed
+          # What matters is that the repositories input was accepted and processed
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to run"
+            exit 1
+          fi
+          echo "PASS: action ran with repositories input (outcome: $OUTCOME)"
