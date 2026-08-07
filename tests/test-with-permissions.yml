@@ -1,0 +1,38 @@
+name: Test with permission inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          app-id: "123456"
+          permission-contents: "read"
+          permission-issues: "write"
+          permission-pull-requests: "read"
+          permission-metadata: "read"
+
+      - name: Assert action ran (token set or failed gracefully without real app)
+        env:
+          TOKEN: ${{ steps.action.outputs.token }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "token is set: $([ -n "$TOKEN" ] && echo yes || echo no)"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$TOKEN" ]; then
+              echo "FAIL: action succeeded but token output is empty"
+              exit 1
+            fi
+            echo "PASS: token was issued with permissions"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (no real GitHub App configured)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

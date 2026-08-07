@@ -1,19 +1,73 @@
-# shogo82148/actions-github-app-token
+# actions-github-app-token
 
-Run GitHub Actions as a GitHub App instead of using secrets.GITHUB_TOKEN or a personal access token.
+A GitHub Action that generates a GitHub App Installation Token.
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/shogo82148/actions-github-app-token](https://github.com/shogo82148/actions-github-app-token).
+## Motivation
 
-## Versions
+There are several ways to use tokens in GitHub Actions.
+However, they have some limitations.
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v1.1.0 | [`v1.1.0`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.1.0) | [`e3b5eeb`](https://github.com/shogo82148/actions-github-app-token/commit/e3b5eeb7dbe0eb2703b0847ece727b8c2122b2b5) |
-| v1.1.1 | [`v1.1.1`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.1.1) | [`974a23b`](https://github.com/shogo82148/actions-github-app-token/commit/974a23b2c503ebde567cf6b78354bb6e2791d3b8) |
-| v1.1.2 | [`v1.1.2`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.1.2) | [`f95cbe2`](https://github.com/shogo82148/actions-github-app-token/commit/f95cbe273ecd155f48ae348df39d0648a01d80af) |
-| v1.2.0 | [`v1.2.0`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.2.0) | [`94b186c`](https://github.com/shogo82148/actions-github-app-token/commit/94b186c0f90dbc0cc72a3a5f056ca277cb14c3ea) |
-| v1.3.0 | [`v1.3.0`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.3.0) | [`d75b03a`](https://github.com/shogo82148/actions-github-app-token/commit/d75b03a80d0450d087a12b72dff2d987a4ced993) |
-| v1.3.1 | [`v1.3.1`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.3.1) | [`84232dc`](https://github.com/shogo82148/actions-github-app-token/commit/84232dc4d9bd875d4dd83e3e5c4705db1c98a997) |
+- [`secrets.GITHUB_TOKEN`](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)
+  - It has some limitations such as [not being able to triggering a new workflow from another workflow](https://github.community/t5/GitHub-Actions/Triggering-a-new-workflow-from-another-workflow/td-p/31676).
+- [Personal Access Tokens (PATs)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+  - PATs allow to access all repositories the user can access.
+  - It's too much authority for using in GitHub Actions workflows.
+- [GitHub Apps](https://docs.github.com/en/developers/apps/getting-started-with-apps/about-apps)
+  - There are [some actions that generate installation tokens](#related-works).
+  - You can limit the repositories an app can access, but if you own a lot of repositories, you need to manage multiple apps.
+
+The action provides [the GitHub Token Vending API](./provider) to manage token permissions.
+
+## Usage
+
+### Install the GitHub App
+
+Install [My Demonstration App](https://github.com/apps/shogo82148-slim).
+
+### Use the Action in Your Workflow
+
+```yaml
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    # use GitHub Actions OIDC Token
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - id: generate
+        uses: shogo82148/actions-github-app-token@v1
+      - run: |
+          gh issue create --title "Do something using GITHUB_TOKEN"
+        env:
+          GITHUB_TOKEN: ${{ steps.generate.outputs.token }}
+```
+
+## How It Works
+
+![How It Works](how-it-works.svg)
+
+1. Request a new credential with OIDC (OpenID Connect) Token.\
+   The `shogo82148/actions-github-app-token` action sends a temporary id token to the credential token vendor.
+2. The vendor signs the request using the long term credential.\
+   The long term credential doesn't leave AWS environment. It keeps the workflow safer.
+3. The vendor a new credential with JWT (JSON Web Token).
+4. GitHub returns a temporary credential.
+
+## Create your own GitHub Token Vending API
+
+If you own an AWS account, you can create the GitHub Token Vending API yourself.
+See [provider/README.md](./provider/README.md) for more detail.
+
+## Related Works
+
+- [actions/create-github-app-token](https://github.com/actions/create-github-app-token)
+- [jwenz723/github-app-installation-token](https://github.com/jwenz723/github-app-installation-token)
+- [tibdex/github-app-token](https://github.com/tibdex/github-app-token)
+- [getsentry/action-github-app-token](https://github.com/getsentry/action-github-app-token)
+- [navikt/github-app-token-generator](https://github.com/navikt/github-app-token-generator)
+- [angie1148/action-github-app-token](https://github.com/angie1148/action-github-app-token)
 
 ## Privacy
 
