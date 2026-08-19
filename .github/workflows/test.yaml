@@ -1,0 +1,68 @@
+name: test
+on:
+  push:
+  pull_request:
+
+jobs:
+  provider:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+      contents: read
+    environment: development
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          cache: true
+          go-version-file: provider/github-app-token/go.mod
+          cache-dependency-path: provider/github-app-token/go.sum
+
+      - name: Test
+        run: |
+          make test
+        working-directory: provider/github-app-token
+
+  action:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          cache: true
+          go-version-file: provider/github-app-token/go.mod
+          cache-dependency-path: provider/github-app-token/go.sum
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version-file: action/package.json
+          cache: "npm"
+          cache-dependency-path: action/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+        working-directory: action
+
+      - name: Test
+        run: |
+          npm run test
+        working-directory: action

@@ -1,0 +1,103 @@
+name: Test with mock provider endpoint
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Set up a mock OIDC token endpoint and a mock provider endpoint.
+      # The action reads ACTIONS_ID_TOKEN_REQUEST_TOKEN and ACTIONS_ID_TOKEN_REQUEST_URL
+      # to get an OIDC token, then POSTs to the provider endpoint.
+      # We mock both so the action can complete successfully.
+      - name: Start mock OIDC and provider servers
+        run: |
+          # Create a mock OIDC token server (returns a fake JWT)
+          mkdir -p /tmp/mock-servers
+
+          cat > /tmp/mock-oidc-server.py << 'EOF'
+          import http.server
+          import json
+
+          class Handler(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'application/json')
+                  self.end_headers()
+                  # Return a fake OIDC token response
+                  resp = json.dumps({"value": "fake-oidc-token-for-testing"})
+                  self.wfile.write(resp.encode())
+              def log_message(self, format, *args):
+                  pass
+
+          server = http.server.HTTPServer(('127.0.0.1', 19998), Handler)
+          server.serve_forever()
+          EOF
+
+          # Create a mock provider server (returns a fake GitHub token)
+          cat > /tmp/mock-provider-server.py << 'EOF'
+          import http.server
+          import json
+
+          class Handler(http.server.BaseHTTPRequestHandler):
+              def do_POST(self):
+                  content_length = int(self.headers.get('Content-Length', 0))
+                  body = self.rfile.read(content_length)
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'application/json')
+                  self.end_headers()
+                  # Return a fake GitHub App token
+                  resp = json.dumps({
+                      "github_token": "ghs_fakegithubapptoken1234567890",
+                      "message": "Token issued successfully"
+                  })
+                  self.wfile.write(resp.encode())
+              def log_message(self, format, *args):
+                  pass
+
+          server = http.server.HTTPServer(('127.0.0.1', 19997), Handler)
+          server.serve_forever()
+          EOF
+
+          # Start both servers in the background
+          python3 /tmp/mock-oidc-server.py &
+          echo $! > /tmp/oidc-server.pid
+          python3 /tmp/mock-provider-server.py &
+          echo $! > /tmp/provider-server.pid
+
+          # Wait for servers to be ready
+          sleep 1
+          echo "Mock servers started"
+
+      - id: action
+        uses: .
+        env:
+          # Point the OIDC token request to our mock server
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: "fake-request-token"
+          ACTIONS_ID_TOKEN_REQUEST_URL: "http://127.0.0.1:19998/token?audience="
+        with:
+          provider-endpoint: "http://127.0.0.1:19997/"
+          app-id: "136245"
+
+      - name: Assert token output is set
+        env:
+          TOKEN: ${{ steps.action.outputs.token }}
+        run: |
+          echo "token length: ${#TOKEN}"
+          if [ -z "$TOKEN" ]; then
+            echo "FAIL: expected token output to be set but it was empty"
+            exit 1
+          fi
+          echo "PASS: token output is set (length=${#TOKEN})"
+
+      - name: Stop mock servers
+        if: always()
+        run: |
+          if [ -f /tmp/oidc-server.pid ]; then
+            kill "$(cat /tmp/oidc-server.pid)" 2>/dev/null || true
+          fi
+          if [ -f /tmp/provider-server.pid ]; then
+            kill "$(cat /tmp/provider-server.pid)" 2>/dev/null || true
+          fi
+          echo "Mock servers stopped"
