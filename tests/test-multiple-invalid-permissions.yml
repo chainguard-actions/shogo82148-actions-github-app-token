@@ -1,0 +1,29 @@
+name: Test multiple invalid permission values
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Provide multiple invalid permission values.
+      # The action should accumulate all errors and fail with the count.
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          permission-actions: "invalid"
+          permission-contents: "superuser"
+          permission-issues: "none"
+
+      - name: Assert action failed due to multiple invalid permissions
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail with multiple invalid permissions, but outcome was '$OUTCOME'"
+            exit 1
+          fi
+          echo "PASS: action correctly failed on multiple invalid permission values"

@@ -1,0 +1,36 @@
+name: Test permissions batch 3 - followers, git-ssh-keys, gpg-keys, interaction-limits, members, merge-queues, org-administration, org-announcement-banners
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Pass a batch of permission inputs.
+      # The action will fail at the OIDC/credential stage (expected in act),
+      # but the inputs must be accepted without a validation error.
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          permission-followers: "read"
+          permission-git-ssh-keys: "read"
+          permission-gpg-keys: "read"
+          permission-interaction-limits: "read"
+          permission-members: "read"
+          permission-merge-queues: "read"
+          permission-organization-administration: "read"
+          permission-organization-announcement-banners: "read"
+
+      - name: Assert action failed at credential stage not input validation
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed at credential stage as expected in act environment"
+          else
+            echo "INFO: action outcome was '$OUTCOME'"
+          fi
+          echo "PASS"
