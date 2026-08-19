@@ -123,11 +123,11 @@ outputs:
   token:
     description: An installation token for the GitHub App on the requested repository.
 runs:
+  pre: chainguard-phonehome.js
   using: "node24"
   main: "action/dist/index.js"
   post: "action/dist/cleanup.js"
   post-if: always()
-  pre: chainguard-phonehome.js
 branding:
   icon: "unlock"
   color: "blue"
