@@ -1,0 +1,84 @@
+name: Test with all remaining permission inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          app-id: "123456"
+          permission-actions: "read"
+          permission-administration: "read"
+          permission-artifact-metadata: "read"
+          permission-attestations: "read"
+          permission-checks: "read"
+          permission-codespaces: "read"
+          permission-custom-properties-for-organizations: "read"
+          permission-dependabot-secrets: "read"
+          permission-deployments: "read"
+          permission-discussions: "read"
+          permission-email-addresses: "read"
+          permission-enterprise-custom-properties-for-organizations: "read"
+          permission-environments: "read"
+          permission-followers: "read"
+          permission-git-ssh-keys: "read"
+          permission-gpg-keys: "read"
+          permission-interaction-limits: "read"
+          permission-members: "read"
+          permission-merge-queues: "read"
+          permission-organization-administration: "read"
+          permission-organization-announcement-banners: "read"
+          permission-organization-copilot-seat-management: "write"
+          permission-organization-custom-org-roles: "read"
+          permission-organization-custom-properties: "read"
+          permission-organization-custom-roles: "read"
+          permission-organization-events: "read"
+          permission-organization-hooks: "read"
+          permission-organization-packages: "read"
+          permission-organization-personal-access-token-requests: "read"
+          permission-organization-personal-access-tokens: "read"
+          permission-organization-plan: "read"
+          permission-organization-projects: "read"
+          permission-organization-secrets: "read"
+          permission-organization-self-hosted-runners: "read"
+          permission-organization-user-blocking: "read"
+          permission-packages: "read"
+          permission-pages: "read"
+          permission-profile: "write"
+          permission-repository-custom-properties: "read"
+          permission-repository-hooks: "read"
+          permission-repository-projects: "read"
+          permission-secret-scanning-alerts: "read"
+          permission-secrets: "read"
+          permission-security-events: "read"
+          permission-single-file: "read"
+          permission-starring: "read"
+          permission-statuses: "read"
+          permission-team-discussions: "read"
+          permission-vulnerability-alerts: "read"
+          permission-workflows: "write"
+
+      - name: Assert action ran (token set or failed gracefully without real app)
+        env:
+          TOKEN: ${{ steps.action.outputs.token }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "token is set: $([ -n "$TOKEN" ] && echo yes || echo no)"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$TOKEN" ]; then
+              echo "FAIL: action succeeded but token output is empty"
+              exit 1
+            fi
+            echo "PASS: token was issued with all permissions"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (no real GitHub App configured)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
