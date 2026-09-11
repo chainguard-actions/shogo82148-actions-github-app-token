@@ -10,25 +10,5 @@
 
 **Harden Agent Version:** `2`
 
-Action **shogo82148--actions-github-app-token/v1.1.2** was hardened automatically. 1 finding(s) were identified and resolved across 1 iteration(s).
-
-## Findings Fixed
-
-### missing-permissions (severity: medium)
-
-The workflow file test.yaml has no top-level `permissions:` key, and the `action` job (which runs on ubuntu-latest, macos-latest, and windows-latest via matrix) has no job-level `permissions:` key. Only the `provider` job defines permissions. Without explicit permissions, the `action` job inherits the default repository permissions (which may include write access to contents and other scopes), violating the principle of least privilege.
-
-Locations:
-
-- `.github/workflows/test.yaml:1`
-
-## Iteration Notes
-
-### Iteration 1
-
-**Fixes applied:** missing-permissions
-
-**Notes:**
-
-Added a job-level `permissions:` block to the `action` job in `.github/workflows/test.yaml` with `contents: read`. This is the minimum permission required for the job, which only checks out the repository and runs tests (setup-go, setup-node, npm ci, npm test). The `provider` job already had its own permissions block and was not modified.
+Action **shogo82148--actions-github-app-token/v1.1.2** was hardened automatically. 0 finding(s) were identified and resolved across 0 iteration(s).
 

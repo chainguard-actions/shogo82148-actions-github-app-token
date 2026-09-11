@@ -15,7 +15,6 @@ outputs:
   token:
     description: An installation token for the GitHub App on the requested repository.
 runs:
-  pre: chainguard-phonehome.js
   using: "node24"
   main: "action/lib/index.js"
   post: "action/lib/cleanup.js"
