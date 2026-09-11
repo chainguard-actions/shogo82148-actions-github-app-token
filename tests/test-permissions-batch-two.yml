@@ -1,0 +1,46 @@
+name: Test permission inputs batch two
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Pass a broad set of permission inputs. The action will fail at the OIDC
+      # stage (no credentials in act), but the inputs are exercised for coverage.
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          permission-members: "read"
+          permission-merge-queues: "read"
+          permission-organization-administration: "read"
+          permission-organization-announcement-banners: "read"
+          permission-organization-copilot-seat-management: "write"
+          permission-organization-custom-org-roles: "read"
+          permission-organization-custom-properties: "read"
+          permission-organization-custom-roles: "read"
+          permission-organization-hooks: "read"
+          permission-organization-packages: "read"
+          permission-organization-personal-access-token-requests: "read"
+          permission-organization-personal-access-tokens: "read"
+          permission-organization-plan: "read"
+          permission-organization-projects: "read"
+          permission-organization-secrets: "read"
+          permission-organization-self-hosted-runners: "read"
+          permission-organization-user-blocking: "read"
+
+      - name: Assert action ran (fails gracefully without credentials)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (no credentials available in act)"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

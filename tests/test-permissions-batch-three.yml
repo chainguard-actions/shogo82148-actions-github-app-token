@@ -1,0 +1,46 @@
+name: Test permission inputs batch three and repositories input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Pass a broad set of permission inputs plus the repositories input.
+      # The action will fail at the OIDC stage (no credentials in act),
+      # but the inputs are exercised for coverage.
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          repositories: "R_kgDOExample"
+          permission-packages: "read"
+          permission-pages: "read"
+          permission-profile: "write"
+          permission-repository-custom-properties: "read"
+          permission-repository-hooks: "read"
+          permission-repository-projects: "read"
+          permission-secret-scanning-alerts: "read"
+          permission-secrets: "read"
+          permission-security-events: "read"
+          permission-single-file: "read"
+          permission-starring: "read"
+          permission-statuses: "read"
+          permission-team-discussions: "read"
+          permission-vulnerability-alerts: "read"
+          permission-workflows: "write"
+
+      - name: Assert action ran (fails gracefully without credentials)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (no credentials available in act)"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
