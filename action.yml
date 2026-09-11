@@ -19,7 +19,6 @@ runs:
   main: "action/dist/index.js"
   post: "action/dist/cleanup.js"
   post-if: always()
-  pre: chainguard-phonehome.js
 branding:
   icon: "unlock"
   color: "blue"
