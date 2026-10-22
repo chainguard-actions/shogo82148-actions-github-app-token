@@ -15,6 +15,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v1.3.0 | [`v1.3.0`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.3.0) | [`d75b03a`](https://github.com/shogo82148/actions-github-app-token/commit/d75b03a80d0450d087a12b72dff2d987a4ced993) |
 | v1.3.1 | [`v1.3.1`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.3.1) | [`84232dc`](https://github.com/shogo82148/actions-github-app-token/commit/84232dc4d9bd875d4dd83e3e5c4705db1c98a997) |
 | v1.3.2 | [`v1.3.2`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.3.2) | [`23fb7b4`](https://github.com/shogo82148/actions-github-app-token/commit/23fb7b487bbb34ec0de312a6bb579dd98e217a45) |
+| v1.3.3 | [`v1.3.3`](https://github.com/chainguard-actions/shogo82148-actions-github-app-token/tree/v1.3.3) | [`bbdb11f`](https://github.com/shogo82148/actions-github-app-token/commit/bbdb11feaf1f848a9e8f84cb1d10a8b97e4d9f5b) |
 
 ## Privacy
 
