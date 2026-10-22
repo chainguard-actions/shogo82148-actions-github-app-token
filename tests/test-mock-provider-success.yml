@@ -1,0 +1,71 @@
+name: Test token issued via mock provider
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Start mock OIDC/provider server
+        run: |
+          rm -f /tmp/mock-requests.log
+          nohup node "$GITHUB_WORKSPACE/tests/fixtures/mock-server.js" /tmp/mock-requests.log 18080 > /tmp/mock-server.out 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:18080/health >/dev/null; then
+              echo "mock server ready"; exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/mock-server.out
+          echo "FAIL: mock server did not start"
+          exit 1
+      - id: action
+        uses: .
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_URL: "http://127.0.0.1:18080/oidc?api-version=2.0"
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: fake-request-token
+        with:
+          provider-endpoint: http://127.0.0.1:18080/provider
+          app-id: "12345"
+          repositories: "R_abc R_def"
+          permission-contents: write
+          permission-issues: read
+          permission-organization-plan: read
+          permission-workflows: write
+          permission-repository-projects: admin
+      - name: Assert token output
+        env:
+          ACTUAL: ${{ steps.action.outputs.token }}
+        run: |
+          echo "token length: ${#ACTUAL}"
+          if [ "$ACTUAL" != "ghs_mocktoken1234567890" ]; then
+            echo "FAIL: unexpected token output"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert requests sent correctly
+        run: |
+          cat /tmp/mock-requests.log
+          fail=0
+          check() {
+            if grep -F -q -- "$1" /tmp/mock-requests.log; then
+              echo "ok: $1"
+            else
+              echo "FAIL: missing $1"; fail=1
+            fi
+          }
+          check 'audience=https%3A%2F%2Fgithub-app.shogo82148.com%2F12345'
+          check '"auth":"Bearer fake-request-token"'
+          check '"auth":"Bearer fake-oidc-jwt"'
+          check '"repositories":["R_abc","R_def"]'
+          check '"contents":"write"'
+          check '"issues":"read"'
+          check '"organization_plan":"read"'
+          check '"workflows":"write"'
+          check '"repository_projects":"admin"'
+          check '"api_url":"'
+          if grep -F -q '"pull_requests"' /tmp/mock-requests.log; then
+            echo "FAIL: unset permission pull_requests should not be sent"; fail=1
+          fi
+          [ "$fail" = 0 ] || exit 1
+          echo "PASS"
