@@ -1,0 +1,13 @@
+{
+  "status": "self_contained",
+  "entries": [
+    {
+      "path": "action/dist/index.js",
+      "status": "self_contained"
+    },
+    {
+      "path": "action/dist/cleanup.js",
+      "status": "self_contained"
+    }
+  ]
+}

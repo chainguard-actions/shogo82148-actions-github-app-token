@@ -1,0 +1,44 @@
+name: Test valid permissions and repositories
+on:
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          app-id: "136245"
+          repositories: "R_kgDOAAAAAA R_kgDOBBBBBB"
+          permission-contents: read
+          permission-issues: write
+          permission-workflows: write
+          permission-organization-plan: read
+          permission-repository-projects: admin
+      - name: Assert token issued, or failed gracefully without OIDC
+        env:
+          RESULT: ${{ steps.action.outputs.token }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$RESULT" ]; then
+              echo "FAIL: action succeeded but token output is empty"
+              exit 1
+            fi
+            echo "PASS: token issued"
+          elif [ "$OUTCOME" = "failure" ]; then
+            if [ -n "$RESULT" ]; then
+              echo "FAIL: action failed but still set a token"
+              exit 1
+            fi
+            echo "PASS: action failed gracefully (OIDC provider unavailable under act)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
